@@ -1,14 +1,14 @@
-package actions_test
+package input_test
 
 import (
 	"slices"
 	"testing"
 
-	"github.com/FollowTheProcess/actions"
+	"github.com/FollowTheProcess/actions/input"
 	"github.com/FollowTheProcess/test"
 )
 
-func TestInput(t *testing.T) {
+func TestGet(t *testing.T) {
 	tests := []struct {
 		env   map[string]string // Env vars to set for the test
 		name  string            // Name of the test case
@@ -83,14 +83,14 @@ func TestInput(t *testing.T) {
 				t.Setenv(key, val)
 			}
 
-			got, ok := actions.Input(tt.input)
+			got, ok := input.Get(tt.input)
 			test.Equal(t, ok, tt.ok, test.Context("ok return value did not match"))
 			test.Equal(t, got, tt.want, test.Context("returned input variable was wrong"))
 		})
 	}
 }
 
-func TestInputBool(t *testing.T) {
+func TestBool(t *testing.T) {
 	tests := []struct {
 		env     map[string]string // Env vars to set for the test
 		name    string            // Name of the test case
@@ -194,14 +194,14 @@ func TestInputBool(t *testing.T) {
 				t.Setenv(key, val)
 			}
 
-			got, err := actions.InputBool(tt.input)
+			got, err := input.Bool(tt.input)
 			test.WantErr(t, err, tt.wantErr)
 			test.Equal(t, got, tt.want)
 		})
 	}
 }
 
-func TestInputLines(t *testing.T) {
+func TestLines(t *testing.T) {
 	tests := []struct {
 		env     map[string]string // Env vars to set for the test
 		name    string            // Name of the test case
@@ -251,7 +251,7 @@ func TestInputLines(t *testing.T) {
 				t.Setenv(key, val)
 			}
 
-			got, err := actions.InputLines(tt.input)
+			got, err := input.Lines(tt.input)
 			test.WantErr(t, err, tt.wantErr)
 			test.EqualFunc(t, got, tt.want, slices.Equal)
 		})
