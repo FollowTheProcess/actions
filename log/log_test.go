@@ -92,3 +92,68 @@ func TestDebug(t *testing.T) {
 		})
 	}
 }
+
+func TestNotice(t *testing.T) {
+	tests := []struct {
+		name        string           // Name of the test case
+		message     string           // The message to be logged
+		want        string           // Expected log message
+		annotations []log.Annotation // Annotations to apply to the notice log
+	}{
+		{
+			name:        "empty",
+			message:     "",
+			annotations: nil,
+			want:        "",
+		},
+		{
+			name:        "just message",
+			message:     "notice meeee",
+			annotations: nil,
+			want:        "::notice::notice meeee\n",
+		},
+		{
+			name:        "message escaped",
+			message:     "percent % percent % cr \r cr \r lf \n lf \n",
+			annotations: nil,
+			want:        "::notice::percent %25 percent %25 cr %0D cr %0D lf %0A lf %0A\n",
+		},
+		{
+			name:    "with title",
+			message: "notice meeee",
+			annotations: []log.Annotation{
+				log.Title("My Title"),
+			},
+			want: "::notice title=My Title::notice meeee\n",
+		},
+		{
+			name:    "with file",
+			message: "notice meeee",
+			annotations: []log.Annotation{
+				log.File("cmd/tool/main.go"),
+			},
+			want: "::notice file=cmd/tool/main.go::notice meeee\n",
+		},
+		{
+			name:    "title and file",
+			message: "Unexpected token '<'",
+			annotations: []log.Annotation{
+				log.Title("Syntax Error"),
+				log.File("src/lib.rs"),
+			},
+			want: "::notice title=Syntax Error,file=src/lib.rs::Unexpected token '<'\n",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			buf := &bytes.Buffer{}
+			logger := log.New(buf)
+
+			logger.Notice(tt.message, tt.annotations...)
+
+			got := buf.String()
+			test.Diff(t, got, tt.want)
+		})
+	}
+}
