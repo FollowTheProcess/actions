@@ -1,6 +1,9 @@
 package log
 
-import "text/template"
+import (
+	"strings"
+	"text/template"
+)
 
 // annotationTemplate is the text/template syntax for creating a log annotation.
 //
@@ -22,6 +25,16 @@ var funcMap = template.FuncMap{
 }
 
 var templ = template.Must(template.New("annotation").Funcs(funcMap).Parse(annotationTemplate))
+
+// propertyEscaper escapes disallowed characters in workflow log command properties
+// like `file` etc.
+var propertyEscaper = strings.NewReplacer(
+	"%", "%25",
+	"\r", "%0D",
+	"\n", "%0A",
+	":", "%3A",
+	",", "%2C",
+)
 
 // annotation is an optional attachment to certain workflow commands (notice, error, and warning)
 // that adds additional metadata to the log and/or associates it with a range of source code.

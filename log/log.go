@@ -12,22 +12,11 @@ import (
 	"strings"
 )
 
-var (
-	// properties in workflow commands (e.g. file, startLine etc.) must be
-	// escaped according to these rules.
-	propertyEscaper = strings.NewReplacer(
-		"%", "%25",
-		"\r", "%0D",
-		"\n", "%0A",
-		":", "%3A",
-		",", "%2C",
-	)
-	// log messages must also be escaped.
-	messageEscaper = strings.NewReplacer(
-		"%", "%25",
-		"\r", "%0D",
-		"\n", "%0A",
-	)
+// messageEscaper escapes disallowed characters in workflow log messages.
+var messageEscaper = strings.NewReplacer(
+	"%", "%25",
+	"\r", "%0D",
+	"\n", "%0A",
 )
 
 // Logger is the actions logger, it maintains no state other than and [io.Writer]
@@ -90,15 +79,45 @@ func (l Logger) Debug(format string, a ...any) {
 //
 // If message is the empty string "", nothing will be logged.
 //
-// Additionally, the caller can configure source file annotation whereby the notice
-// message will be associated with a particular file, line, column etc. of source. This is
+// Additionally, the caller can configure source file annotation whereby the log
+// will be associated with a particular file, line, column etc. of source. This is
 // done by passing in one or more [Annotation] functions that configure this behaviour.
 //
 // The annotations are all optional, and will only be added to the log message if they
-// are explicitly set by the caller. If no annotations are passed, the notice log
+// are explicitly set by the caller. If no annotations are passed, the log
 // will simply be the message string.
 func (l Logger) Notice(message string, annotations ...Annotation) {
 	l.log("notice", message, annotations...)
+}
+
+// Warning writes a warning message to the workflow log.
+//
+// If message is the empty string "", nothing will be logged.
+//
+// Additionally, the caller can configure source file annotation whereby the log
+// will be associated with a particular file, line, column etc. of source. This is
+// done by passing in one or more [Annotation] functions that configure this behaviour.
+//
+// The annotations are all optional, and will only be added to the log message if they
+// are explicitly set by the caller. If no annotations are passed, the log
+// will simply be the message string.
+func (l Logger) Warning(message string, annotations ...Annotation) {
+	l.log("warning", message, annotations...)
+}
+
+// Error writes a error message to the workflow log.
+//
+// If message is the empty string "", nothing will be logged.
+//
+// Additionally, the caller can configure source file annotation whereby the log
+// will be associated with a particular file, line, column etc. of source. This is
+// done by passing in one or more [Annotation] functions that configure this behaviour.
+//
+// The annotations are all optional, and will only be added to the log message if they
+// are explicitly set by the caller. If no annotations are passed, the log
+// will simply be the message string.
+func (l Logger) Error(message string, annotations ...Annotation) {
+	l.log("error", message, annotations...)
 }
 
 // log renders an annotated message (cmd = notice | warning | error).

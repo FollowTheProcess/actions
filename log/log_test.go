@@ -93,12 +93,12 @@ func TestDebug(t *testing.T) {
 	}
 }
 
-func TestNotice(t *testing.T) {
+func TestAnnotations(t *testing.T) {
 	tests := []struct {
 		name        string           // Name of the test case
 		message     string           // The message to be logged
 		want        string           // Expected log message
-		annotations []log.Annotation // Annotations to apply to the notice log
+		annotations []log.Annotation // Annotations to apply to the log
 	}{
 		{
 			name:        "empty",
@@ -302,4 +302,28 @@ func TestNotice(t *testing.T) {
 			test.Diff(t, got, tt.want)
 		})
 	}
+}
+
+func TestWarning(t *testing.T) {
+	// Most of the logic is tested in the big test above, we really just want to see ::warning
+	buf := &bytes.Buffer{}
+	logger := log.New(buf)
+
+	logger.Warning("This is dangerous", log.Title("Be Careful!"), log.File("src/main.py"), log.Lines(2, 6))
+
+	got := buf.String()
+	want := "::warning title=Be Careful!,file=src/main.py,line=2,endLine=6::This is dangerous\n"
+	test.Diff(t, got, want)
+}
+
+func TestError(t *testing.T) {
+	// Same... but ::error
+	buf := &bytes.Buffer{}
+	logger := log.New(buf)
+
+	logger.Error("This is broken", log.Title("Syntax Error"), log.File("src/main.py"), log.Lines(2, 6))
+
+	got := buf.String()
+	want := "::error title=Syntax Error,file=src/main.py,line=2,endLine=6::This is broken\n"
+	test.Diff(t, got, want)
 }
