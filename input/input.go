@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -76,4 +77,40 @@ func Lines(name string) ([]string, error) {
 	return lines, nil
 }
 
-// TODO(@FollowTheProcess): Support Float, Int, comma separated or line separated lists
+// Int gets the integer value of an actions input variable.
+//
+// If the variable is not defined, or if the value is not a valid
+// integer, an error is returned.
+func Int(name string) (int, error) {
+	value, ok := Get(name)
+	if !ok {
+		return 0, fmt.Errorf("input variable %q not defined", name)
+	}
+
+	val, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, fmt.Errorf("input variable %q is invalid integer: %q", name, value)
+	}
+
+	return val, nil
+}
+
+// Float gets the float value of an actions input variable.
+//
+// if the variable is not defined, or if the value is not a valid
+// float, an error is returned.
+func Float(name string) (float64, error) {
+	value, ok := Get(name)
+	if !ok {
+		return 0, fmt.Errorf("input variable %q not defined", name)
+	}
+
+	val, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return 0, fmt.Errorf("input variable %q is invalid float: %q", name, value)
+	}
+
+	return val, nil
+}
+
+// TODO(@FollowTheProcess): Support comma separated or line separated lists
