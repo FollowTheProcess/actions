@@ -1,6 +1,7 @@
 package actions_test
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/FollowTheProcess/actions"
@@ -23,6 +24,13 @@ func TestInput(t *testing.T) {
 			ok:    false,
 		},
 		{
+			name:  "empty name",
+			env:   map[string]string{},
+			input: "",
+			want:  "",
+			ok:    false,
+		},
+		{
 			name: "missing",
 			env: map[string]string{
 				"INPUT_SOMETHING": "here",
@@ -37,6 +45,15 @@ func TestInput(t *testing.T) {
 				"INPUT_SOMETHING": "here",
 			},
 			input: "something",
+			want:  "here",
+			ok:    true,
+		},
+		{
+			name: "case insensitive",
+			env: map[string]string{
+				"INPUT_SOMETHING": "here",
+			},
+			input: "SoMEThIng",
 			want:  "here",
 			ok:    true,
 		},
@@ -180,6 +197,63 @@ func TestInputBool(t *testing.T) {
 			got, err := actions.InputBool(tt.input)
 			test.WantErr(t, err, tt.wantErr)
 			test.Equal(t, got, tt.want)
+		})
+	}
+}
+
+func TestInputLines(t *testing.T) {
+	tests := []struct {
+		env     map[string]string // Env vars to set for the test
+		name    string            // Name of the test case
+		input   string            // Name of the input variable to get
+		want    []string          // Expected return value
+		wantErr bool              // Whether we wanted an error
+	}{
+		{
+			name:    "empty",
+			env:     map[string]string{},
+			input:   "hello",
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "missing",
+			env: map[string]string{
+				"INPUT_HELLO_THERE": "hello",
+			},
+			input:   "something_else",
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "found",
+			env: map[string]string{
+				"INPUT_HELLO_THERE": "hello\nthere\ngeneral\nkenobi",
+			},
+			input:   "hello_there",
+			want:    []string{"hello", "there", "general", "kenobi"},
+			wantErr: false,
+		},
+		{
+			name: "found and trimmed",
+			env: map[string]string{
+				"INPUT_HELLO_THERE": "\n\n hello\t \n\t there  \n    general\n\t\t kenobi\n\n",
+			},
+			input:   "hello_there",
+			want:    []string{"hello", "there", "general", "kenobi"},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for key, val := range tt.env {
+				t.Setenv(key, val)
+			}
+
+			got, err := actions.InputLines(tt.input)
+			test.WantErr(t, err, tt.wantErr)
+			test.EqualFunc(t, got, tt.want, slices.Equal)
 		})
 	}
 }
