@@ -22,7 +22,10 @@ func Get(name string) (value string, ok bool) {
 	envName := fmt.Sprintf("INPUT_%s", strings.ToUpper(cleaned))
 
 	value, ok = os.LookupEnv(envName)
-	return strings.TrimSpace(value), ok
+	if !ok {
+		return "", false
+	}
+	return strings.TrimSpace(value), true
 }
 
 // Bool gets the boolean value of an actions input variable.
