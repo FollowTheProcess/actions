@@ -36,7 +36,7 @@ func New(out io.Writer) Logger {
 }
 
 // IsDebug reports whether the actions runner is running in
-// debug mode (${{ runner.debug }}) such that logs written with [Debug] will be visible.
+// debug mode (${{ runner.debug }}) such that logs written with [Logger.Debug] will be visible.
 //
 // See https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/troubleshooting-workflows/enabling-debug-logging
 func IsDebug() bool {
