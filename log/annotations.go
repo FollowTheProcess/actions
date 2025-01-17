@@ -6,7 +6,7 @@ import "text/template"
 //
 // It's fairly simple, it proceeds in order through the annotation checking each field:
 //   - If it is the zero value, it won't print the key=value for that field
-//   - Whether the field before it was the zero value, in which case the previous field wasn't printed and it
+//   - If the field before it was the zero value, the previous field wasn't printed and it
 //     wont insert a comma between them
 //
 // It also calls the two escape functions to sanitise the text for GitHub to render.
@@ -19,7 +19,6 @@ const annotationTemplate = `{{- if ne .Title "" }}title={{ .Title | escapeProper
 
 var funcMap = template.FuncMap{
 	"escapeProperty": propertyEscaper.Replace,
-	"escapeData":     messageEscaper.Replace,
 }
 
 var templ = template.Must(template.New("annotation").Funcs(funcMap).Parse(annotationTemplate))
