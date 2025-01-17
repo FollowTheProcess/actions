@@ -257,3 +257,135 @@ func TestLines(t *testing.T) {
 		})
 	}
 }
+
+func TestInt(t *testing.T) {
+	tests := []struct {
+		env     map[string]string // Env vars to set for the test
+		name    string            // Name of the test case
+		input   string            // Name of the input variable to get
+		want    int               // Expected return value
+		wantErr bool              // Whether we wanted an error
+	}{
+		{
+			name:    "empty",
+			env:     map[string]string{},
+			input:   "hello",
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "missing",
+			env: map[string]string{
+				"INPUT_HELLO_THERE": "hello",
+			},
+			input:   "something_else",
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "found",
+			env: map[string]string{
+				"INPUT_NUM_THINGS": "42",
+			},
+			input:   "num_things",
+			want:    42,
+			wantErr: false,
+		},
+		{
+			name: "found invalid",
+			env: map[string]string{
+				"INPUT_NUM_THINGS": "42cheese",
+			},
+			input:   "num_things",
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "found and trimmed",
+			env: map[string]string{
+				"INPUT_NUM_THINGS": "\n\n 347 \n\t",
+			},
+			input:   "num_things",
+			want:    347,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for key, val := range tt.env {
+				t.Setenv(key, val)
+			}
+
+			got, err := input.Int(tt.input)
+			test.WantErr(t, err, tt.wantErr)
+			test.Equal(t, got, tt.want)
+		})
+	}
+}
+
+func TestFloat(t *testing.T) {
+	tests := []struct {
+		env     map[string]string // Env vars to set for the test
+		name    string            // Name of the test case
+		input   string            // Name of the input variable to get
+		want    float64           // Expected return value
+		wantErr bool              // Whether we wanted an error
+	}{
+		{
+			name:    "empty",
+			env:     map[string]string{},
+			input:   "hello",
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "missing",
+			env: map[string]string{
+				"INPUT_HELLO_THERE": "hello",
+			},
+			input:   "something_else",
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "found",
+			env: map[string]string{
+				"INPUT_PI": "3.14159",
+			},
+			input:   "pi",
+			want:    3.14159,
+			wantErr: false,
+		},
+		{
+			name: "found invalid",
+			env: map[string]string{
+				"INPUT_PI": "3.cheese",
+			},
+			input:   "pi",
+			want:    0,
+			wantErr: true,
+		},
+		{
+			name: "found and trimmed",
+			env: map[string]string{
+				"INPUT_PI": "\n\n 3.14159 \n\t",
+			},
+			input:   "pi",
+			want:    3.14159,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for key, val := range tt.env {
+				t.Setenv(key, val)
+			}
+
+			got, err := input.Float(tt.input)
+			test.WantErr(t, err, tt.wantErr)
+			test.Equal(t, got, tt.want)
+		})
+	}
+}
