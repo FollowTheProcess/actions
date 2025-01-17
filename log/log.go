@@ -10,30 +10,7 @@ import (
 	"io"
 	"os"
 	"strings"
-	"text/template"
 )
-
-// annotationTemplate is the text/template syntax for creating a log annotation.
-//
-// It's fairly simple, it proceeds in order through the annotation checking each field:
-//   - If it is the zero value, it won't print the key=value for that field
-//   - Whether the field before it was the zero value, in which case the previous field wasn't printed and it
-//     wont insert a comma between them
-//
-// It also calls the two escape functions to sanitise the text for GitHub to render.
-const annotationTemplate = `{{- if ne .Title "" }}title={{ .Title | escapeProperty }}{{ end -}}
-{{- if ne .File "" }}{{ if ne .Title "" }},{{ end }}file={{ .File | escapeProperty }}{{ end -}}
-{{- if ne .StartLine 0 }}{{ if ne .File "" }},{{ end }}line={{ .StartLine }}{{ end -}}
-{{- if ne .EndLine 0 }}{{ if ne .StartLine 0 }},{{ end }}endLine={{ .EndLine }}{{ end -}}
-{{- if ne .StartColumn 0 }}{{ if ne .EndLine 0 }},{{ end }}col={{ .StartColumn }}{{ end -}}
-{{- if ne .EndColumn 0 }}{{ if ne .StartColumn 0}},{{ end }}endColumn={{ .EndColumn }}{{ end -}}`
-
-var funcMap = template.FuncMap{
-	"escapeProperty": propertyEscaper.Replace,
-	"escapeData":     messageEscaper.Replace,
-}
-
-var templ = template.Must(template.New("annotation").Funcs(funcMap).Parse(annotationTemplate))
 
 var (
 	// properties in workflow commands (e.g. file, startLine etc.) must be
@@ -121,6 +98,13 @@ func (l Logger) Debug(format string, a ...any) {
 // are explicitly set by the caller. If no annotations are passed, the notice log
 // will simply be the message string.
 func (l Logger) Notice(message string, annotations ...Annotation) {
+	l.log("notice", message, annotations...)
+}
+
+// log renders an annotated message (cmd = notice | warning | error).
+//
+// It's behaviour is common to all annotations.
+func (l Logger) log(cmd, message string, annotations ...Annotation) {
 	if message == "" {
 		return
 	}
@@ -130,7 +114,7 @@ func (l Logger) Notice(message string, annotations ...Annotation) {
 
 	// If there are no annotations, this is just a straight message
 	if len(annotations) == 0 {
-		fmt.Fprintf(l.out, "::notice::%s\n", message)
+		fmt.Fprintf(l.out, "::%s::%s\n", cmd, message)
 		return
 	}
 
@@ -142,10 +126,18 @@ func (l Logger) Notice(message string, annotations ...Annotation) {
 
 	buf := &bytes.Buffer{}
 	if err := templ.Execute(buf, ann); err != nil {
-		// TODO(@FollowTheProcess): What do here? I guess just do the message with no annotations
-		fmt.Println("Uh oh!", err)
+		// I guess just return the unannotated message?
+		fmt.Fprintf(l.out, "::%s::%s\n", cmd, message)
 		return
 	}
 
-	fmt.Fprintf(l.out, "::notice %s::%s\n", buf.String(), message)
+	// If there were no annotations after rendering the template (due to the rules for the annotations)
+	// then we can just do the message again
+	if buf.Len() == 0 {
+		fmt.Fprintf(l.out, "::%s::%s\n", cmd, message)
+		return
+	}
+
+	// Otherwise we need a space after ::<cmd> and the first annotation
+	fmt.Fprintf(l.out, "::%s %s::%s\n", cmd, buf.String(), message)
 }
