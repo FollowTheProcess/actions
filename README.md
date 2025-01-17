@@ -42,6 +42,7 @@ I put it to you that Go could be an excellent language for writing GitHub action
 - A powerful, batteries included standard library with more or less everything an action author needs out of the box
 - It plays excellently with Docker, leading to tiny, very efficient images
 - It's simple and safe
+- General purpose enough to be able to everything an action might want to do
 
 > [!TIP]
 > You don't even need Docker! You could just `GOOS=linux GOARCH=amd64 go build <your action>` and fetch the binary
