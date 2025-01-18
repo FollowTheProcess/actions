@@ -5,7 +5,6 @@
 package log
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -143,20 +142,15 @@ func (l Logger) log(cmd, message string, annotations ...Annotation) {
 		annotation.apply(&ann)
 	}
 
-	buf := &bytes.Buffer{}
-	if err := templ.Execute(buf, ann); err != nil {
-		// I guess just return the unannotated message?
-		fmt.Fprintf(l.out, "::%s::%s\n", cmd, message)
-		return
-	}
+	annotation := ann.String()
 
-	// If there were no annotations after rendering the template (due to the rules for the annotations)
-	// then we can just do the message again
-	if buf.Len() == 0 {
+	// If there were no annotations after stringifying it (due to the rules for the annotations)
+	// then we can just do the raw message again
+	if len(annotation) == 0 {
 		fmt.Fprintf(l.out, "::%s::%s\n", cmd, message)
 		return
 	}
 
 	// Otherwise we need a space after ::<cmd> and the first annotation
-	fmt.Fprintf(l.out, "::%s %s::%s\n", cmd, buf.String(), message)
+	fmt.Fprintf(l.out, "::%s %s::%s\n", cmd, annotation, message)
 }

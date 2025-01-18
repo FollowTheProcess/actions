@@ -2,6 +2,7 @@ package log_test
 
 import (
 	"bytes"
+	"io"
 	"testing"
 
 	"github.com/FollowTheProcess/actions/log"
@@ -326,4 +327,13 @@ func TestError(t *testing.T) {
 	got := buf.String()
 	want := "::error title=Syntax Error,file=src/main.py,line=2,endLine=6::This is broken\n"
 	test.Diff(t, got, want)
+}
+
+func BenchmarkLog(b *testing.B) {
+	logger := log.New(io.Discard)
+
+	b.ResetTimer()
+	for range b.N {
+		logger.Notice("Hello", log.Title("A Title"), log.File("src/main.rs"), log.Lines(1, 18))
+	}
 }
