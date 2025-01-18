@@ -365,7 +365,7 @@ func TestStartGroup(t *testing.T) {
 		logger.StartGroup(tt.title)
 
 		got := buf.String()
-		test.Equal(t, got, tt.want)
+		test.Diff(t, got, tt.want)
 	}
 }
 
@@ -394,6 +394,52 @@ func TestWithGroup(t *testing.T) {
 	want := "::group::Auto!\n::notice::I'm in the group!\nI'm a non log print\n::endgroup::\n"
 
 	test.Diff(t, got, want)
+}
+
+func TestMask(t *testing.T) {
+	tests := []struct {
+		name string // Name of the test case
+		str  string // The thing to mask
+		want string // Expected output
+	}{
+		{
+			name: "empty",
+			str:  "",
+			want: "",
+		},
+		{
+			name: "valid",
+			str:  "secret sauce",
+			want: "::add-mask::secret sauce\n",
+		},
+		{
+			name: "valid whitespace",
+			str:  "\n\n\t  whitespace   \t\n",
+			want: "::add-mask::whitespace\n",
+		},
+		{
+			name: "valid escaped",
+			str:  "escape me percent % crlf \r\n stuff here",
+			want: "::add-mask::escape me percent %25 crlf %0D%0A stuff here\n",
+		},
+		{
+			name: "env var",
+			str:  "$SUPER_SECRET",
+			want: "::add-mask::$SUPER_SECRET\n",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			buf := &bytes.Buffer{}
+			logger := log.New(buf)
+
+			logger.Mask(tt.str)
+
+			got := buf.String()
+			test.Diff(t, got, tt.want)
+		})
+	}
 }
 
 func BenchmarkLog(b *testing.B) {
