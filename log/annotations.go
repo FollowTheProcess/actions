@@ -1,30 +1,9 @@
 package log
 
 import (
+	"strconv"
 	"strings"
-	"text/template"
 )
-
-// annotationTemplate is the text/template syntax for creating a log annotation.
-//
-// It's fairly simple, it proceeds in order through the annotation checking each field:
-//   - If it is the zero value, it won't print the key=value for that field
-//   - If the field before it was the zero value, the previous field wasn't printed and it
-//     wont insert a comma between them
-//
-// It also calls the two escape functions to sanitise the text for GitHub to render.
-const annotationTemplate = `{{- if ne .Title "" }}title={{ .Title | escapeProperty }}{{ end -}}
-{{- if ne .File "" }}{{ if ne .Title "" }},{{ end }}file={{ .File | escapeProperty }}{{ end -}}
-{{- if ne .StartLine 0 }}{{ if ne .File "" }},{{ end }}line={{ .StartLine }}{{ end -}}
-{{- if ne .EndLine 0 }}{{ if ne .StartLine 0 }},{{ end }}endLine={{ .EndLine }}{{ end -}}
-{{- if ne .StartColumn 0 }}{{ if ne .EndLine 0 }},{{ end }}col={{ .StartColumn }}{{ end -}}
-{{- if ne .EndColumn 0 }}{{ if ne .StartColumn 0}},{{ end }}endColumn={{ .EndColumn }}{{ end -}}`
-
-var funcMap = template.FuncMap{
-	"escapeProperty": propertyEscaper.Replace,
-}
-
-var templ = template.Must(template.New("annotation").Funcs(funcMap).Parse(annotationTemplate))
 
 // propertyEscaper escapes disallowed characters in workflow log command properties
 // like `file` etc.
@@ -41,12 +20,70 @@ var propertyEscaper = strings.NewReplacer(
 //
 // The fields must be exported for text/template to be able to use them.
 type annotation struct {
-	Title       string // The title for the annotation
-	File        string // Path of the file to associate the annotation to
-	StartLine   uint   // The line number (start at 1) of the start of the source range to annotate
-	EndLine     uint   // The line number corresponding with the end of the annotated source
-	StartColumn uint   // Start column of the annotated source range
-	EndColumn   uint   // End column of the annotated source range
+	title       string // The title for the annotation
+	file        string // Path of the file to associate the annotation to
+	startLine   uint   // The line number (start at 1) of the start of the source range to annotate
+	endLine     uint   // The line number corresponding with the end of the annotated source
+	startColumn uint   // Start column of the annotated source range
+	endColumn   uint   // End column of the annotated source range
+}
+
+// String returns the stringified version of the annotation.
+//
+// It's fairly simple, it proceeds in order through the annotation checking each field:
+//   - If it is the zero value, it won't print the key=value for that field
+//   - If the field before it was the zero value, the previous field wasn't printed and it
+//     wont insert a comma between them
+func (a annotation) String() string {
+	s := &strings.Builder{}
+
+	if a.title != "" {
+		s.WriteString("title=")
+		s.WriteString(propertyEscaper.Replace(a.title))
+	}
+
+	if a.file != "" {
+		// If there was a title we'll need a comma
+		if a.title != "" {
+			s.WriteByte(',')
+		}
+		s.WriteString("file=")
+		s.WriteString(propertyEscaper.Replace(a.file))
+	}
+
+	if a.startLine != 0 {
+		if a.file != "" {
+			s.WriteByte(',')
+		}
+		s.WriteString("line=")
+		s.WriteString(strconv.FormatUint(uint64(a.startLine), 10))
+	}
+
+	if a.endLine != 0 {
+		if a.startLine != 0 {
+			s.WriteByte(',')
+		}
+		s.WriteString("endLine=")
+		s.WriteString(strconv.FormatUint(uint64(a.endLine), 10))
+	}
+
+	if a.startColumn != 0 {
+		if a.endLine != 0 {
+			s.WriteByte(',')
+		}
+		s.WriteString("col=")
+		s.WriteString(strconv.FormatUint(uint64(a.startColumn), 10))
+	}
+
+	if a.endColumn != 0 {
+		if a.startColumn != 0 {
+			s.WriteByte(',')
+		}
+		s.WriteString("endColumn=")
+		s.WriteString(strconv.FormatUint(uint64(a.endColumn), 10))
+	}
+
+	return s.String()
 }
 
 // Annotation is a log command annotation.
@@ -72,7 +109,7 @@ func (a annotator) apply(ann *annotation) {
 // Title adds a title to the log command annotation.
 func Title(title string) Annotation {
 	f := func(ann *annotation) {
-		ann.Title = title
+		ann.title = title
 	}
 	return annotator(f)
 }
@@ -80,7 +117,7 @@ func Title(title string) Annotation {
 // File associates a source file with the annotation.
 func File(file string) Annotation {
 	f := func(ann *annotation) {
-		ann.File = file
+		ann.file = file
 	}
 	return annotator(f)
 }
@@ -110,12 +147,12 @@ func Lines(start, end uint) Annotation {
 
 	f := func(ann *annotation) {
 		// If there's no file, it doesn't make sense to add line info
-		if ann.File == "" {
+		if ann.file == "" {
 			start = 0
 			end = 0
 		}
-		ann.StartLine = start
-		ann.EndLine = end
+		ann.startLine = start
+		ann.endLine = end
 	}
 
 	return annotator(f)
@@ -143,13 +180,13 @@ func Span(start, end uint) Annotation {
 	f := func(ann *annotation) {
 		// If there's no file, it doesn't make sense to add span info, likewise
 		// if start and end lines are different, it cannot also have column info
-		if ann.File == "" || ann.StartLine != ann.EndLine {
+		if ann.file == "" || ann.startLine != ann.endLine {
 			start = 0
 			end = 0
 		}
 
-		ann.StartColumn = start
-		ann.EndColumn = end
+		ann.startColumn = start
+		ann.endColumn = end
 	}
 
 	return annotator(f)
