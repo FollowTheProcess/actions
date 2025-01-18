@@ -152,6 +152,9 @@ func TestSetFile(t *testing.T) {
 
 		hasEnvVarSet := bytes.Contains(contents, []byte("SOMETHING=value"))
 		test.True(t, hasEnvVarSet)
+
+		// The real environment should also have it set
+		test.Equal(t, os.Getenv("SOMETHING"), "value")
 	})
 	t.Run("unset", func(t *testing.T) {
 		envFile = testEnvName

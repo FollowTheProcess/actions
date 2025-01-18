@@ -64,5 +64,6 @@ func Set(key, value string) error {
 	defer file.Close()
 
 	fmt.Fprintf(file, "%s=%s\n", key, value)
+	os.Setenv(key, value) // Set it in the actual environment too
 	return nil
 }
