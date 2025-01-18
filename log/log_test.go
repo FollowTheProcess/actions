@@ -2,6 +2,7 @@ package log_test
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"testing"
 
@@ -326,6 +327,72 @@ func TestError(t *testing.T) {
 
 	got := buf.String()
 	want := "::error title=Syntax Error,file=src/main.py,line=2,endLine=6::This is broken\n"
+	test.Diff(t, got, want)
+}
+
+func TestStartGroup(t *testing.T) {
+	tests := []struct {
+		name  string // Name of the test case
+		title string // Title of the log group
+		want  string // Expected output
+	}{
+		{
+			name:  "no title",
+			title: "",
+			want:  "",
+		},
+		{
+			name:  "valid",
+			title: "Doing Group Things",
+			want:  "::group::Doing Group Things\n",
+		},
+		{
+			name:  "trimmed",
+			title: "\t\n  Whitespace  \t\n",
+			want:  "::group::Whitespace\n",
+		},
+		{
+			name:  "escaped",
+			title: "Title with percent % crlf \r\n colon : comma ,",
+			want:  "::group::Title with percent %25 crlf %0D%0A colon %3A comma %2C\n",
+		},
+	}
+
+	for _, tt := range tests {
+		buf := &bytes.Buffer{}
+		logger := log.New(buf)
+
+		logger.StartGroup(tt.title)
+
+		got := buf.String()
+		test.Equal(t, got, tt.want)
+	}
+}
+
+func TestEndGroup(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := log.New(buf)
+
+	logger.EndGroup()
+
+	got := buf.String()
+	want := "::endgroup::\n"
+
+	test.Equal(t, got, want)
+}
+
+func TestWithGroup(t *testing.T) {
+	buf := &bytes.Buffer{}
+	logger := log.New(buf)
+
+	logger.WithGroup("Auto!", func() {
+		logger.Notice("I'm in the group!")
+		fmt.Fprintln(buf, "I'm a non log print")
+	})
+
+	got := buf.String()
+	want := "::group::Auto!\n::notice::I'm in the group!\nI'm a non log print\n::endgroup::\n"
+
 	test.Diff(t, got, want)
 }
 

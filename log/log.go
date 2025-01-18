@@ -18,7 +18,7 @@ var messageEscaper = strings.NewReplacer(
 	"\n", "%0A",
 )
 
-// Logger is the actions logger, it maintains no state other than and [io.Writer]
+// Logger is the actions logger, it maintains no state other than an [io.Writer]
 // which is where the logs will be printed.
 type Logger struct {
 	out io.Writer
@@ -45,7 +45,8 @@ func IsDebug() bool {
 // Debug writes a formatted debug message to the workflow log.
 //
 // The signature is analogous to [fmt.Printf] allowing format verbs
-// and message formatting.
+// and message formatting. It is not necessary to append a final newline
+// to format.
 //
 // If the format arguments are omitted, format will be treated as
 // a verbatim string and passed straight through.
@@ -153,4 +154,54 @@ func (l Logger) log(cmd, message string, annotations ...Annotation) {
 
 	// Otherwise we need a space after ::<cmd> and the first annotation
 	fmt.Fprintf(l.out, "::%s %s::%s\n", cmd, annotation, message)
+}
+
+// StartGroup begins a new expandable group in the workflow log.
+//
+// Anything printed between the call to StartGroup and the call to [Logger.EndGroup] will
+// be contained within this group.
+//
+// The caller is responsible for calling [Logger.EndGroup] after a group is started. Recommended usage is
+// as follows:
+//
+//	func doInGroup(logger actions.Logger) {
+//		logger.StartGroup()
+//		defer logger.EndGroup()
+//		// ...
+//		// Do your grouped logic here, the group will be
+//		// closed as the function returns
+//	}
+//
+// If you want this to be handled automatically, use [Logger.WithGroup] and pass your logic as a closure.
+//
+// If title is the empty string "", nothing will be logged. Title will also be trimmed of
+// all leading and trailing whitespace.
+//
+// See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#grouping-log-lines
+func (l Logger) StartGroup(title string) {
+	if title == "" {
+		return
+	}
+	title = propertyEscaper.Replace(strings.TrimSpace(title))
+	fmt.Fprintf(l.out, "::group::%s\n", title)
+}
+
+// EndGroup ends an expandable log group.
+//
+// Usage is typically deferred, see [Logger.StartGroup] for more info.
+func (l Logger) EndGroup() {
+	fmt.Fprintln(l.out, "::endgroup::")
+}
+
+// WithGroup executes the provided closure fn inside an expandable group in the workflow log.
+//
+// It automatically handles calling [Logger.StartGroup] and [Logger.EndGroup] to ensure the group
+// is created and stopped correctly.
+//
+// Anything printed by fn will be contained within the created group. If title is the empty
+// string "", nothing will be logged.
+func (l Logger) WithGroup(title string, fn func()) {
+	l.StartGroup(title)
+	defer l.EndGroup()
+	fn()
 }
