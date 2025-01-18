@@ -32,8 +32,6 @@ func Get(key string) (value string, ok bool) {
 	return os.LookupEnv(key)
 }
 
-// TODO(@FollowTheProcess): Multiline stuff as per https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#multiline-strings
-
 // Set sets an environment variable by writing it to $GITHUB_ENV.
 //
 // If the value contains newlines, Set will use the "EOF" pattern to
