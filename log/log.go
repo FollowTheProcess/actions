@@ -205,3 +205,21 @@ func (l Logger) WithGroup(title string, fn func()) {
 	defer l.EndGroup()
 	fn()
 }
+
+// Mask redacts a string or environment variable, preventing it from being printed in the workflow logs.
+//
+// When masked, the string or variable is replaced by `*` characters in subsequent logs. If str is
+// the empty string "", nothing will be logged.
+//
+// See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#masking-a-value-in-a-log
+//
+//	logger := log.New(os.Stdout)
+//	logger.Mask("$MY_SECRET") // Prevent the env var MY_SECRET from being logged
+//	logger.Mask("a string") // Prevent any subsequent occurrences of "a string" from being logged
+func (l Logger) Mask(str string) {
+	if str == "" {
+		return
+	}
+	str = messageEscaper.Replace(strings.TrimSpace(str))
+	fmt.Fprintf(l.out, "::add-mask::%s\n", str)
+}
