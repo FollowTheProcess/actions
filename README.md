@@ -29,16 +29,18 @@ The latter option suffers because you likely have to implement *a lot* of stuff 
 - Platform independent filepath manipulations
 - Executing external commands
 - Responding to `${{ runner.debug }}` for writing debug logs
+- Source file annotations
+- Grouping logs
 - And more...
 
-And the former means you have to write Javascript...
+And the former means you have to write Javascript... 👀
 
 ### Go and GitHub Actions
 
-I put it to you that Go could be an excellent language for writing GitHub actions:
+I put it to you that Go could be an *excellent* language for writing GitHub actions:
 
-- It's fast and memory efficient (saving 💵 on GitHub runner costs)
-- Excellent support for concurrency
+- It's fast and memory efficient (saving 💵 on private GitHub runner costs)
+- Excellent support for concurrency and asynchronous execution
 - A powerful, batteries included standard library with more or less everything an action author needs out of the box
 - It plays excellently with Docker, leading to tiny, very efficient images
 - It's simple and safe
