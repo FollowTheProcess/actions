@@ -11,6 +11,7 @@ package env
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 )
@@ -31,9 +32,13 @@ func Get(key string) (value string, ok bool) {
 	return os.LookupEnv(key)
 }
 
-// TODO(@FollowTheProcess): Multiline stuff as per https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#multiline-strings
-
 // Set sets an environment variable by writing it to $GITHUB_ENV.
+//
+// If the value contains newlines, Set will use the "EOF" pattern to
+// correctly set multiline env vars with the delimiter being a randomly
+// generated string, minimising the chance of collision with the contents.
+//
+// See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#multiline-strings.
 //
 // Attempting to set $GITHUB_*, $RUNNER_*, $CI or $NODE_OPTIONS is not allowed and will
 // return an error.
@@ -63,7 +68,29 @@ func Set(key, value string) error {
 	}
 	defer file.Close()
 
-	fmt.Fprintf(file, "%s=%s\n", key, value)
+	// If the value is multi-line, do the whole EOF delimiter thing, but with
+	// a random string to make pretty sure it never collides with file content
+	if strings.Contains(value, "\n") {
+		delimiter := fmt.Sprintf("ghadelimiter_%s", randString())
+		fmt.Fprintf(file, "%s<<%s\n%s\n%s", key, delimiter, value, delimiter)
+	} else {
+		fmt.Fprintf(file, "%s=%s\n", key, value)
+	}
+
 	os.Setenv(key, value) // Set it in the actual environment too
 	return nil
+}
+
+// randString produces a random string of 16 characters.
+func randString() string {
+	const (
+		charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		size    = 16
+	)
+	b := make([]byte, size)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+
+	return string(b)
 }

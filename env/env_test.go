@@ -156,6 +156,29 @@ func TestSetFile(t *testing.T) {
 		// The real environment should also have it set
 		test.Equal(t, os.Getenv("SOMETHING"), "value")
 	})
+	t.Run("multiline", func(t *testing.T) {
+		envFile = testEnvName
+		tmp, err := os.CreateTemp("", "TestSetFile*")
+		test.Ok(t, err)
+		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+
+		t.Setenv(envFile, tmp.Name()) // Set $TEST_GITHUB_ENV to the path to our file
+
+		value := "values\nacross\nmultiple\nlines"
+
+		err = Set("MULTILINE", value)
+		test.Ok(t, err)
+
+		contents, err := os.ReadFile(tmp.Name())
+		test.Ok(t, err)
+
+		test.True(t, bytes.Contains(contents, []byte("MULTILINE<<")))
+		test.True(t, bytes.Contains(contents, []byte("ghadelimiter_")))
+		test.True(t, bytes.Contains(contents, []byte(value)))
+
+		// The real environment should also have it set
+		test.Equal(t, os.Getenv("MULTILINE"), value)
+	})
 	t.Run("unset", func(t *testing.T) {
 		envFile = testEnvName
 		tmp, err := os.CreateTemp("", "TestSetFile*")
