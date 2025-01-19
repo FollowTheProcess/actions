@@ -7,14 +7,16 @@ package actions //nolint: testpackage
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/FollowTheProcess/test"
 )
 
 const (
-	testEnvName = "TEST_GITHUB_ENV"
-	testOutName = "TEST_GITHUB_OUTPUT"
+	testEnvName     = "TEST_GITHUB_ENV"
+	testOutName     = "TEST_GITHUB_OUTPUT"
+	testSummaryName = "TEST_GITHUB_STEP_SUMMARY"
 )
 
 func TestGetEnv(t *testing.T) {
@@ -258,5 +260,73 @@ func TestSetOutput(t *testing.T) {
 
 		err := SetOutput("CONFIG", "yes")
 		test.Err(t, err)
+	})
+}
+
+func TestSummary(t *testing.T) {
+	old := summaryFile
+	summaryFile = testSummaryName
+	t.Cleanup(func() { summaryFile = old })
+
+	t.Run("unset", func(t *testing.T) {
+		err := Summary("# Markdown!\n")
+		test.Err(t, err) // $TEST_GITHUB_STEP_SUMMARY is not set
+	})
+
+	t.Run("exists but empty", func(t *testing.T) {
+		tmp, err := os.CreateTemp("", "TestSummary*")
+		test.Ok(t, err)
+		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+
+		t.Setenv(summaryFile, tmp.Name()) // Set $TEST_GITHUB_STEP_SUMMARY to our temp file
+
+		contents := "### Hello world! :rocket:\n"
+
+		err = Summary(contents)
+		test.Ok(t, err)
+
+		written, err := os.ReadFile(tmp.Name())
+		test.Ok(t, err)
+
+		test.Equal(t, string(written), contents)
+	})
+	t.Run("overwrite existing contents", func(t *testing.T) {
+		tmp, err := os.CreateTemp("", "TestSummary*")
+		test.Ok(t, err)
+		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+
+		t.Setenv(summaryFile, tmp.Name()) // Set $TEST_GITHUB_STEP_SUMMARY to our temp file
+
+		err = os.WriteFile(tmp.Name(), []byte("original contents"), filePermissions)
+		test.Ok(t, err)
+
+		contents := "# Only Content\n\nShould be nothing else here\n"
+
+		err = Summary(contents)
+		test.Ok(t, err)
+
+		written, err := os.ReadFile(tmp.Name())
+		test.Ok(t, err)
+
+		test.Equal(t, string(written), contents)
+	})
+	t.Run("create if not exists", func(t *testing.T) {
+		tmpDir, err := os.MkdirTemp("", "TestSummary*")
+		test.Ok(t, err)
+		t.Cleanup(func() { os.RemoveAll(tmpDir) })
+
+		path := filepath.Join(tmpDir, "createme")
+
+		t.Setenv(summaryFile, path) // Set $TEST_GITHUB_STEP_SUMMARY to tempdir/<file that doesn't exist yet>
+
+		contents := "# Markdown\n\nYeah!\n"
+
+		err = Summary(contents)
+		test.Ok(t, err)
+
+		written, err := os.ReadFile(path)
+		test.Ok(t, err)
+
+		test.Equal(t, string(written), contents)
 	})
 }

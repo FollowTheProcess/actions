@@ -25,6 +25,10 @@ var (
 	// outFile is the name of the env var containing the filepath to the special GitHub file
 	// to which output variables should be written.
 	outFile = "GITHUB_OUTPUT"
+
+	// summaryFile is the name of the env var containing the filepath to the special GitHub file
+	// to which step summaries should be written.
+	summaryFile = "GITHUB_STEP_SUMMARY"
 )
 
 // GetEnv retrieves the value of a named environment variable written to $GITHUB_ENV.
@@ -37,9 +41,9 @@ func GetEnv(key string) (value string, ok bool) {
 
 // SetEnv sets an environment variable by writing it to $GITHUB_ENV.
 //
-// If the value contains newlines, SetEnv will use the "EOF" pattern to
-// correctly set multiline env vars with the delimiter being a randomly
-// generated string, minimising the chance of collision with the contents.
+// If the value contains newlines, SetEnv will use the "EOF" pattern to correctly
+// set multiline values with the delimiter being a randomly generated string,
+// minimising the chance of collision with the contents.
 //
 // See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#multiline-strings.
 //
@@ -58,6 +62,31 @@ func SetEnv(key, value string) error {
 // See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#multiline-strings.
 func SetOutput(key, value string) error {
 	return setVarFile(outFile, key, value)
+}
+
+// Summary writes a step summary to $GITHUB_STEP_SUMMARY, creating the backing file if necessary.
+//
+// GitHub flavoured markdown content is supported. Subsequent calls to Summary overwrite the contents.
+//
+// For writing complex markdown or html summaries, consider using [html/template] to format your content
+// as desired, then passing the rendered template to Summary.
+//
+// See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#adding-a-job-summary
+//
+// [html/template]: https://pkg.go.dev/html/template
+func Summary(contents string) error {
+	path := os.Getenv(summaryFile)
+	if path == "" {
+		return fmt.Errorf("$%s is not set or is empty", summaryFile)
+	}
+
+	// Write the contents to the file, creating it if necessary, overwriting it if
+	// called again
+	if err := os.WriteFile(path, []byte(contents), filePermissions); err != nil {
+		return fmt.Errorf("could not write to $%s at path %s: %w", summaryFile, path, err)
+	}
+
+	return nil
 }
 
 // setVarFile sets either a GITHUB_ENV or GITHUB_OUTPUT file variable. The process
