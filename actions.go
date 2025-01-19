@@ -98,6 +98,7 @@ func setVarFile(name, key, value string) error {
 	if key == "" {
 		return errors.New("key cannot be empty")
 	}
+
 	if value == "" {
 		return errors.New("value cannot be empty")
 	}
@@ -125,7 +126,7 @@ func setVarFile(name, key, value string) error {
 	// If the value is multi-line, do the whole EOF delimiter thing, but with
 	// a random string to make pretty sure it never collides with file content
 	if strings.Contains(value, "\n") {
-		delimiter := fmt.Sprintf("ghadelimiter_%s", randString())
+		delimiter := "ghadelimiter_" + randString()
 		fmt.Fprintf(file, "%s<<%s\n%s\n%s", key, delimiter, value, delimiter)
 	} else {
 		fmt.Fprintf(file, "%s=%s\n", key, value)
@@ -133,7 +134,9 @@ func setVarFile(name, key, value string) error {
 
 	// If it's an env var, let's export the actual env var too
 	if name == envFile {
-		os.Setenv(key, value)
+		if err := os.Setenv(key, value); err != nil {
+			return fmt.Errorf("failed to set $%s: %w", key, err)
+		}
 	}
 
 	return nil
@@ -145,9 +148,10 @@ func randString() string {
 		charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 		size    = 16
 	)
+
 	b := make([]byte, size)
 	for i := range b {
-		b[i] = charset[rand.IntN(len(charset))]
+		b[i] = charset[rand.IntN(len(charset))] //nolint: gosec // This is not for security purposes
 	}
 
 	return string(b)

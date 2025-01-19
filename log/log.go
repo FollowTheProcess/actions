@@ -63,6 +63,7 @@ func (l Logger) Debug(format string, a ...any) {
 	if format == "" {
 		return
 	}
+
 	var message string
 	if len(a) == 0 {
 		// No data to format, treat it as a simple string
@@ -134,6 +135,7 @@ func (l Logger) log(cmd, message string, annotations ...Annotation) {
 	// If there are no annotations, this is just a straight message
 	if len(annotations) == 0 {
 		fmt.Fprintf(l.out, "::%s::%s\n", cmd, message)
+
 		return
 	}
 
@@ -149,6 +151,7 @@ func (l Logger) log(cmd, message string, annotations ...Annotation) {
 	// then we can just do the raw message again
 	if len(annotation) == 0 {
 		fmt.Fprintf(l.out, "::%s::%s\n", cmd, message)
+
 		return
 	}
 
@@ -182,6 +185,7 @@ func (l Logger) StartGroup(title string) {
 	if title == "" {
 		return
 	}
+
 	title = propertyEscaper.Replace(strings.TrimSpace(title))
 	fmt.Fprintf(l.out, "::group::%s\n", title)
 }
@@ -220,6 +224,7 @@ func (l Logger) Mask(str string) {
 	if str == "" {
 		return
 	}
+
 	str = messageEscaper.Replace(strings.TrimSpace(str))
 	fmt.Fprintf(l.out, "::add-mask::%s\n", str)
 }

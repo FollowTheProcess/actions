@@ -19,12 +19,13 @@ func Get(name string) (value string, ok bool) {
 	}
 
 	cleaned := strings.ReplaceAll(name, " ", "_")
-	envName := fmt.Sprintf("INPUT_%s", strings.ToUpper(cleaned))
+	envName := "INPUT_" + strings.ToUpper(cleaned)
 
 	value, ok = os.LookupEnv(envName)
 	if !ok {
 		return "", false
 	}
+
 	return strings.TrimSpace(value), true
 }
 
@@ -68,6 +69,7 @@ func Lines(name string) ([]string, error) {
 	scanner.Split(bufio.ScanLines)
 
 	var lines []string
+
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		lines = append(lines, line)
