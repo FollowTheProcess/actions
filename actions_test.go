@@ -1,4 +1,4 @@
-package actions //nolint: testpackage
+package actions //nolint: testpackage // See below
 // testpackage is off because we need access to envFile and outFile in here because this project
 // itself is tested on GitHub Actions, meaning we can't remove or manipulate the real
 // $GITHUB_ENV file to test things like what happens if it's not present etc. so for tests
@@ -132,10 +132,12 @@ func TestSetEnvValidation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			old := envFile
 			envFile = testEnvName
+
 			t.Cleanup(func() { envFile = old })
 
 			err := SetEnv(tt.key, tt.value)
 			test.WantErr(t, err, tt.wantErr)
+
 			if err != nil {
 				test.Equal(t, err.Error(), tt.errMsg)
 			}
@@ -146,10 +148,11 @@ func TestSetEnvValidation(t *testing.T) {
 func TestSetEnv(t *testing.T) {
 	old := envFile
 	envFile = testEnvName
+
 	t.Cleanup(func() { envFile = old })
 
 	t.Run("exists", func(t *testing.T) {
-		tmp, err := os.CreateTemp("", "TestSetEnv*")
+		tmp, err := os.CreateTemp(t.TempDir(), "TestSetEnv*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
@@ -168,7 +171,7 @@ func TestSetEnv(t *testing.T) {
 		test.Equal(t, os.Getenv("SOMETHING"), "value")
 	})
 	t.Run("multiline", func(t *testing.T) {
-		tmp, err := os.CreateTemp("", "TestSetEnv*")
+		tmp, err := os.CreateTemp(t.TempDir(), "TestSetEnv*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
@@ -190,7 +193,7 @@ func TestSetEnv(t *testing.T) {
 		test.Equal(t, os.Getenv("MULTILINE"), value)
 	})
 	t.Run("unset", func(t *testing.T) {
-		tmp, err := os.CreateTemp("", "TestSetEnv*")
+		tmp, err := os.CreateTemp(t.TempDir(), "TestSetEnv*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
@@ -209,10 +212,11 @@ func TestSetEnv(t *testing.T) {
 func TestSetOutput(t *testing.T) {
 	old := outFile
 	outFile = testOutName
+
 	t.Cleanup(func() { outFile = old })
 
 	t.Run("exists", func(t *testing.T) {
-		tmp, err := os.CreateTemp("", "TestSetOutput*")
+		tmp, err := os.CreateTemp(t.TempDir(), "TestSetOutput*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
@@ -228,7 +232,7 @@ func TestSetOutput(t *testing.T) {
 		test.True(t, hasOutputSet)
 	})
 	t.Run("multiline", func(t *testing.T) {
-		tmp, err := os.CreateTemp("", "TestSetOutput*")
+		tmp, err := os.CreateTemp(t.TempDir(), "TestSetOutput*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
@@ -247,7 +251,7 @@ func TestSetOutput(t *testing.T) {
 		test.True(t, bytes.Contains(contents, []byte(value)))
 	})
 	t.Run("unset", func(t *testing.T) {
-		tmp, err := os.CreateTemp("", "TestSetOutput*")
+		tmp, err := os.CreateTemp(t.TempDir(), "TestSetOutput*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
@@ -266,6 +270,7 @@ func TestSetOutput(t *testing.T) {
 func TestSummary(t *testing.T) {
 	old := summaryFile
 	summaryFile = testSummaryName
+
 	t.Cleanup(func() { summaryFile = old })
 
 	t.Run("unset", func(t *testing.T) {
@@ -274,7 +279,7 @@ func TestSummary(t *testing.T) {
 	})
 
 	t.Run("exists but empty", func(t *testing.T) {
-		tmp, err := os.CreateTemp("", "TestSummary*")
+		tmp, err := os.CreateTemp(t.TempDir(), "TestSummary*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
@@ -291,7 +296,7 @@ func TestSummary(t *testing.T) {
 		test.Equal(t, string(written), contents)
 	})
 	t.Run("overwrite existing contents", func(t *testing.T) {
-		tmp, err := os.CreateTemp("", "TestSummary*")
+		tmp, err := os.CreateTemp(t.TempDir(), "TestSummary*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
@@ -311,9 +316,7 @@ func TestSummary(t *testing.T) {
 		test.Equal(t, string(written), contents)
 	})
 	t.Run("create if not exists", func(t *testing.T) {
-		tmpDir, err := os.MkdirTemp("", "TestSummary*")
-		test.Ok(t, err)
-		t.Cleanup(func() { os.RemoveAll(tmpDir) })
+		tmpDir := t.TempDir()
 
 		path := filepath.Join(tmpDir, "createme")
 
@@ -321,7 +324,7 @@ func TestSummary(t *testing.T) {
 
 		contents := "# Markdown\n\nYeah!\n"
 
-		err = Summary(contents)
+		err := Summary(contents)
 		test.Ok(t, err)
 
 		written, err := os.ReadFile(path)

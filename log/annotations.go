@@ -47,6 +47,7 @@ func (a annotation) String() string {
 		if a.title != "" {
 			s.WriteByte(',')
 		}
+
 		s.WriteString("file=")
 		s.WriteString(propertyEscaper.Replace(a.file))
 	}
@@ -55,6 +56,7 @@ func (a annotation) String() string {
 		if a.file != "" {
 			s.WriteByte(',')
 		}
+
 		s.WriteString("line=")
 		s.WriteString(strconv.FormatUint(uint64(a.startLine), 10))
 	}
@@ -63,6 +65,7 @@ func (a annotation) String() string {
 		if a.startLine != 0 {
 			s.WriteByte(',')
 		}
+
 		s.WriteString("endLine=")
 		s.WriteString(strconv.FormatUint(uint64(a.endLine), 10))
 	}
@@ -71,6 +74,7 @@ func (a annotation) String() string {
 		if a.endLine != 0 {
 			s.WriteByte(',')
 		}
+
 		s.WriteString("col=")
 		s.WriteString(strconv.FormatUint(uint64(a.startColumn), 10))
 	}
@@ -79,6 +83,7 @@ func (a annotation) String() string {
 		if a.startColumn != 0 {
 			s.WriteByte(',')
 		}
+
 		s.WriteString("endColumn=")
 		s.WriteString(strconv.FormatUint(uint64(a.endColumn), 10))
 	}
@@ -93,12 +98,12 @@ type Annotation interface {
 	// Note: having the Annotation be an opaque interface completely hides all internal
 	// workings from the end user, all they see is the Annotation type and the exported
 	// functions. They are also nicely grouped in the godoc.
-	apply(*annotation)
+	apply(a *annotation)
 }
 
 // annotator is a function that implements the Annotation interface, kind of like
 // how http.HandlerFunc implements http.Handler.
-type annotator func(*annotation)
+type annotator func(a *annotation)
 
 // apply applies the option, implementing the Option interface for our option
 // functional adapter by calling itself.
@@ -111,6 +116,7 @@ func Title(title string) Annotation {
 	f := func(ann *annotation) {
 		ann.title = title
 	}
+
 	return annotator(f)
 }
 
@@ -119,6 +125,7 @@ func File(file string) Annotation {
 	f := func(ann *annotation) {
 		ann.file = file
 	}
+
 	return annotator(f)
 }
 
@@ -134,6 +141,7 @@ func Lines(start, end uint) Annotation {
 		// Given a bogus start line
 		start = 1
 	}
+
 	if end < 1 {
 		// Given a bogus end line
 		end = 1
@@ -151,6 +159,7 @@ func Lines(start, end uint) Annotation {
 			start = 0
 			end = 0
 		}
+
 		ann.startLine = start
 		ann.endLine = end
 	}
