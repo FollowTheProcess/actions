@@ -152,7 +152,7 @@ func TestSetEnv(t *testing.T) {
 	t.Cleanup(func() { envFile = old })
 
 	t.Run("exists", func(t *testing.T) {
-		tmp, err := os.CreateTemp(t.TempDir(), "TestSetEnv*")
+		tmp, err := os.CreateTemp("", "TestSetEnv*")
 		test.Ok(t, err)
 
 		t.Setenv(envFile, tmp.Name()) // Set $TEST_GITHUB_ENV to the path to our file
@@ -170,7 +170,7 @@ func TestSetEnv(t *testing.T) {
 		test.Equal(t, os.Getenv("SOMETHING"), "value")
 	})
 	t.Run("multiline", func(t *testing.T) {
-		tmp, err := os.CreateTemp(t.TempDir(), "TestSetEnv*")
+		tmp, err := os.CreateTemp("", "TestSetEnv*")
 		test.Ok(t, err)
 
 		t.Setenv(envFile, tmp.Name()) // Set $TEST_GITHUB_ENV to the path to our file
@@ -210,7 +210,7 @@ func TestSetOutput(t *testing.T) {
 	t.Cleanup(func() { outFile = old })
 
 	t.Run("exists", func(t *testing.T) {
-		tmp, err := os.CreateTemp(t.TempDir(), "TestSetOutput*")
+		tmp, err := os.CreateTemp("", "TestSetOutput*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
@@ -226,7 +226,7 @@ func TestSetOutput(t *testing.T) {
 		test.True(t, hasOutputSet)
 	})
 	t.Run("multiline", func(t *testing.T) {
-		tmp, err := os.CreateTemp(t.TempDir(), "TestSetOutput*")
+		tmp, err := os.CreateTemp("", "TestSetOutput*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
@@ -245,7 +245,7 @@ func TestSetOutput(t *testing.T) {
 		test.True(t, bytes.Contains(contents, []byte(value)))
 	})
 	t.Run("unset", func(t *testing.T) {
-		tmp, err := os.CreateTemp(t.TempDir(), "TestSetOutput*")
+		tmp, err := os.CreateTemp("", "TestSetOutput*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
@@ -273,7 +273,7 @@ func TestSummary(t *testing.T) {
 	})
 
 	t.Run("exists but empty", func(t *testing.T) {
-		tmp, err := os.CreateTemp(t.TempDir(), "TestSummary*")
+		tmp, err := os.CreateTemp("", "TestSummary*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
@@ -290,7 +290,7 @@ func TestSummary(t *testing.T) {
 		test.Equal(t, string(written), contents)
 	})
 	t.Run("overwrite existing contents", func(t *testing.T) {
-		tmp, err := os.CreateTemp(t.TempDir(), "TestSummary*")
+		tmp, err := os.CreateTemp("", "TestSummary*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
@@ -310,7 +310,7 @@ func TestSummary(t *testing.T) {
 		test.Equal(t, string(written), contents)
 	})
 	t.Run("create if not exists", func(t *testing.T) {
-		tmpDir := t.TempDir()
+		tmpDir := ""
 
 		path := filepath.Join(tmpDir, "createme")
 

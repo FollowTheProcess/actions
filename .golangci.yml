@@ -23,6 +23,7 @@ linters:
     - nestif # cyclop does this
     - nonamedreturns # Named returns are often helpful, it's naked returns that are the issue
     - paralleltest # I've never had Go tests take longer than a few seconds, it's fine
+    - usetesting # For whatever reason windows fails with some of these recommendations
     - varnamelen # Lots of false positives of things that are fine
     - wrapcheck # Not every error must be wrapped
 
