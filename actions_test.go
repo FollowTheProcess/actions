@@ -152,7 +152,7 @@ func TestSetEnv(t *testing.T) {
 	t.Cleanup(func() { envFile = old })
 
 	t.Run("exists", func(t *testing.T) {
-		tmp, err := os.CreateTemp("", "TestSetEnv*")
+		tmp, err := os.CreateTemp(t.TempDir(), "TestSetEnv*")
 		test.Ok(t, err)
 		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
 
