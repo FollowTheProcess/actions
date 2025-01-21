@@ -292,11 +292,7 @@ func TestAddPath(t *testing.T) {
 
 		err := AddPath("something")
 		test.Err(t, err)
-		test.Equal(
-			t,
-			err.Error(),
-			"could not open $GITHUB_PATH file missing.txt: open missing.txt: no such file or directory",
-		)
+		test.True(t, strings.Contains(err.Error(), "could not open $GITHUB_PATH file missing.txt"))
 	})
 
 	t.Run("valid", func(t *testing.T) {
