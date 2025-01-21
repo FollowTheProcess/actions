@@ -29,6 +29,15 @@ var (
 	// summaryFile is the name of the env var containing the filepath to the special GitHub file
 	// to which step summaries should be written.
 	summaryFile = "GITHUB_STEP_SUMMARY"
+
+	// pathFile is the name of the env var containing the filepath to the special GitHub file
+	// that holds the value of `$PATH`. By writing to it, you can prepend programs to `$PATH`,
+	// installing them.
+	pathFile = "GITHUB_PATH"
+
+	// realPath is the $PATH env var, we can't really mess with this in tests so this is here
+	// so we have something to manipulate without breaking things.
+	realPath = "PATH"
 )
 
 // GetEnv retrieves the value of a named environment variable written to $GITHUB_ENV.
@@ -62,6 +71,40 @@ func SetEnv(key, value string) error {
 // See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#multiline-strings.
 func SetOutput(key, value string) error {
 	return setVarFile(outFile, key, value)
+}
+
+// AddPath prepends path to $GITHUB_PATH and does the same with the actual $PATH variable.
+//
+// This is how things are installed into github actions runners, the binaries are placed
+// on $PATH (and $GITHUB_PATH).
+//
+// See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#adding-a-system-path
+func AddPath(path string) error {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return errors.New("cannot set an empty path")
+	}
+
+	githubPathFile := os.Getenv(pathFile)
+	if githubPathFile == "" {
+		return errors.New("$GITHUB_PATH is not set or is empty")
+	}
+
+	file, err := os.OpenFile(githubPathFile, os.O_APPEND|os.O_WRONLY, filePermissions)
+	if err != nil {
+		return fmt.Errorf("could not open $GITHUB_PATH file %s: %w", githubPathFile, err)
+	}
+	defer file.Close()
+
+	fmt.Fprintf(file, "%s\n", path)
+
+	// Set $PATH
+	newPath := fmt.Sprintf("%s%s%s", path, string(os.PathListSeparator), os.Getenv(realPath))
+	if err := os.Setenv(realPath, newPath); err != nil {
+		return fmt.Errorf("could not update $PATH: %w", err)
+	}
+
+	return nil
 }
 
 // Summary writes a step summary to $GITHUB_STEP_SUMMARY, creating the backing file if necessary.
