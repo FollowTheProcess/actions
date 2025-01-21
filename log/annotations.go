@@ -17,8 +17,6 @@ var propertyEscaper = strings.NewReplacer(
 
 // annotation is an optional attachment to certain workflow commands (notice, error, and warning)
 // that adds additional metadata to the log and/or associates it with a range of source code.
-//
-// The fields must be exported for text/template to be able to use them.
 type annotation struct {
 	title       string // The title for the annotation
 	file        string // Path of the file to associate the annotation to
