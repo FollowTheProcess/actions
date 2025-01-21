@@ -8,15 +8,18 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/FollowTheProcess/test"
 )
 
 const (
-	testEnvName     = "TEST_GITHUB_ENV"
-	testOutName     = "TEST_GITHUB_OUTPUT"
-	testSummaryName = "TEST_GITHUB_STEP_SUMMARY"
+	testEnvName        = "TEST_GITHUB_ENV"
+	testOutName        = "TEST_GITHUB_OUTPUT"
+	testSummaryName    = "TEST_GITHUB_STEP_SUMMARY"
+	testGitHubPathName = "TEST_GITHUB_PATH"
+	testRealPathName   = "TEST_PATH"
 )
 
 func TestGetEnv(t *testing.T) {
@@ -261,6 +264,59 @@ func TestSetOutput(t *testing.T) {
 	})
 }
 
+func TestAddPath(t *testing.T) {
+	oldpathFile := pathFile
+	oldRealPath := realPath
+	pathFile = testGitHubPathName
+	realPath = testRealPathName
+
+	t.Cleanup(func() {
+		pathFile = oldpathFile
+		realPath = oldRealPath
+	})
+	t.Run("empty path", func(t *testing.T) {
+		err := AddPath("")
+		test.Err(t, err)
+		test.Equal(t, err.Error(), "cannot set an empty path")
+	})
+
+	t.Run("unset env", func(t *testing.T) {
+		err := AddPath("something")
+		test.Err(t, err)
+		test.Equal(t, err.Error(), "$GITHUB_PATH is not set or is empty")
+	})
+
+	t.Run("missing file", func(t *testing.T) {
+		// Set the env var to a file that doesn't exist
+		t.Setenv(pathFile, "missing.txt")
+
+		err := AddPath("something")
+		test.Err(t, err)
+		test.True(t, strings.Contains(err.Error(), "could not open $GITHUB_PATH file missing.txt"))
+	})
+
+	t.Run("valid", func(t *testing.T) {
+		tmp, err := os.CreateTemp("", "TestAddPath*")
+		test.Ok(t, err)
+		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+
+		// Set the env var to our now existing file
+		t.Setenv(pathFile, tmp.Name())
+
+		err = AddPath("something")
+		test.Ok(t, err)
+
+		// The file should now contain "something"
+		contents, err := os.ReadFile(tmp.Name())
+		test.Ok(t, err)
+		test.DiffBytes(t, contents, []byte("something\n"))
+
+		// Our test $PATH env var should have something on the front of it
+		path := os.Getenv(realPath)
+		test.True(t, strings.HasPrefix(path, "something"+string(os.PathListSeparator)))
+	})
+}
+
 func TestSummary(t *testing.T) {
 	old := summaryFile
 	summaryFile = testSummaryName
@@ -310,7 +366,7 @@ func TestSummary(t *testing.T) {
 		test.Equal(t, string(written), contents)
 	})
 	t.Run("create if not exists", func(t *testing.T) {
-		tmpDir := ""
+		tmpDir := t.TempDir()
 
 		path := filepath.Join(tmpDir, "createme")
 
