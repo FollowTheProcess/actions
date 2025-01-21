@@ -370,7 +370,7 @@ func TestSummary(t *testing.T) {
 		test.Equal(t, string(written), contents)
 	})
 	t.Run("create if not exists", func(t *testing.T) {
-		tmpDir := ""
+		tmpDir := t.TempDir()
 
 		path := filepath.Join(tmpDir, "createme")
 
