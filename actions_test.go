@@ -19,6 +19,7 @@ const (
 	testOutName        = "TEST_GITHUB_OUTPUT"
 	testSummaryName    = "TEST_GITHUB_STEP_SUMMARY"
 	testGitHubPathName = "TEST_GITHUB_PATH"
+	testStateName      = "TEST_GITHUB_STATE"
 	testRealPathName   = "TEST_PATH"
 )
 
@@ -235,7 +236,7 @@ func TestSetOutput(t *testing.T) {
 
 		t.Setenv(outFile, tmp.Name()) // Set $TEST_GITHUB_OUTPUT to the path to our file
 
-		value := "values\nacross\nmultiple\nlines"
+		value := "some\nlines\nhere"
 
 		err = SetOutput("MULTILINE", value)
 		test.Ok(t, err)
@@ -260,6 +261,121 @@ func TestSetOutput(t *testing.T) {
 		t.Setenv(envFile, "missing") // Set $TEST_GITHUB_OUTPUT to the path of a missing file
 
 		err := SetOutput("CONFIG", "yes")
+		test.Err(t, err)
+	})
+}
+
+func TestGetState(t *testing.T) {
+	tests := []struct {
+		name string            // Name of the test case
+		env  map[string]string // Env vars to set for the test
+		key  string            // The key of the state var to get
+		want string            // Expected value
+		ok   bool              // Expected ok
+	}{
+		{
+			name: "empty",
+			env:  map[string]string{},
+			key:  "",
+			want: "",
+			ok:   false,
+		},
+		{
+			name: "missing",
+			env: map[string]string{
+				"STATE_SOMETHING": "here",
+			},
+			key:  "OTHER",
+			want: "",
+			ok:   false,
+		},
+		{
+			name: "present but empty",
+			env: map[string]string{
+				"STATE_EMPTY": "",
+			},
+			key:  "EMPTY",
+			want: "",
+			ok:   true,
+		},
+		{
+			name: "present and set",
+			env: map[string]string{
+				"STATE_FULL": "here",
+			},
+			key:  "FULL",
+			want: "here",
+			ok:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for key, val := range tt.env {
+				t.Setenv(key, val)
+			}
+
+			got, ok := GetState(tt.key)
+			test.Equal(t, ok, tt.ok)
+			test.Equal(t, got, tt.want)
+		})
+	}
+}
+
+func TestSetState(t *testing.T) {
+	old := stateFile
+	stateFile = testStateName
+
+	t.Cleanup(func() { stateFile = old })
+
+	t.Run("exists", func(t *testing.T) {
+		tmp, err := os.CreateTemp("", "TestSetState*")
+		test.Ok(t, err)
+		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+
+		t.Setenv(stateFile, tmp.Name()) // Set $TEST_GITHUB_STATE to the path to our file
+
+		err = SetState("SOMETHING", "value")
+		test.Ok(t, err)
+
+		contents, err := os.ReadFile(tmp.Name())
+		test.Ok(t, err)
+
+		hasOutputSet := bytes.Contains(contents, []byte("SOMETHING=value"))
+		test.True(t, hasOutputSet)
+	})
+	t.Run("multiline", func(t *testing.T) {
+		tmp, err := os.CreateTemp("", "TestSetState*")
+		test.Ok(t, err)
+		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+
+		t.Setenv(stateFile, tmp.Name()) // Set $TEST_GITHUB_STATE to the path to our file
+
+		value := "more\nlines\nhere\nwoo"
+
+		err = SetState("MULTILINE", value)
+		test.Ok(t, err)
+
+		contents, err := os.ReadFile(tmp.Name())
+		test.Ok(t, err)
+
+		test.True(t, bytes.Contains(contents, []byte("MULTILINE<<")))
+		test.True(t, bytes.Contains(contents, []byte("ghadelimiter_")))
+		test.True(t, bytes.Contains(contents, []byte(value)))
+	})
+	t.Run("unset", func(t *testing.T) {
+		tmp, err := os.CreateTemp("", "TestSetState*")
+		test.Ok(t, err)
+		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+
+		// Not setting $TEST_GITHUB_STATE
+		err = SetState("KEY", "value")
+		test.Err(t, err)
+	})
+	t.Run("set but no file", func(t *testing.T) {
+		t.Setenv(envFile, "missing") // Set $TEST_GITHUB_STATE to the path of a missing file
+
+		err := SetState("CONFIG", "yes")
 		test.Err(t, err)
 	})
 }
