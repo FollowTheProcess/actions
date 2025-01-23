@@ -30,6 +30,10 @@ var (
 	// to which step summaries should be written.
 	summaryFile = "GITHUB_STEP_SUMMARY"
 
+	// stateFile is the name of the env var containng the filepath to the special GitHub file
+	// to which state should be written for retrieval in other phases of the action.
+	stateFile = "GITHUB_STATE"
+
 	// pathFile is the name of the env var containing the filepath to the special GitHub file
 	// that holds the value of `$PATH`. By writing to it, you can prepend programs to `$PATH`,
 	// installing them.
@@ -71,6 +75,30 @@ func SetEnv(key, value string) error {
 // See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#multiline-strings.
 func SetOutput(key, value string) error {
 	return setVarFile(outFile, key, value)
+}
+
+// GetState gets a state variable by name.
+//
+// State variables are used to pass state between pre, main, and post phases of an action.
+//
+// See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#sending-values-to-the-pre-and-post-actions
+func GetState(key string) (value string, ok bool) {
+	if key == "" {
+		return "", false
+	}
+
+	key = "STATE_" + key
+
+	return os.LookupEnv(key)
+}
+
+// SetState sets a state variable by name.
+//
+// State variables are used to pass state between pre, main, and post phases of an action.
+//
+// See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#sending-values-to-the-pre-and-post-actions
+func SetState(key, value string) error {
+	return setVarFile(stateFile, key, value)
 }
 
 // AddPath prepends path to $GITHUB_PATH and does the same with the actual $PATH variable.
