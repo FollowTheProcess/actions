@@ -215,6 +215,7 @@ func setVarFile(name, key, value string) error {
 
 // randString produces a random string of 16 characters.
 func randString() string {
+	// TODO(@FollowTheProcess): Use crypto/rand.Text when it's out
 	const (
 		charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 		size    = 16
