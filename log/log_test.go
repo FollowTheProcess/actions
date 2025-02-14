@@ -445,9 +445,7 @@ func TestMask(t *testing.T) {
 func BenchmarkLog(b *testing.B) {
 	logger := log.New(io.Discard)
 
-	b.ResetTimer()
-
-	for range b.N {
+	for b.Loop() {
 		logger.Notice("Hello", log.Title("A Title"), log.File("src/main.rs"), log.Lines(1, 18))
 	}
 }
