@@ -158,6 +158,7 @@ func TestSetEnv(t *testing.T) {
 	t.Run("exists", func(t *testing.T) {
 		tmp, err := os.CreateTemp(t.TempDir(), "TestSetEnv*")
 		test.Ok(t, err)
+		tmp.Close()
 
 		t.Setenv(envFile, tmp.Name()) // Set $TEST_GITHUB_ENV to the path to our file
 
@@ -176,6 +177,7 @@ func TestSetEnv(t *testing.T) {
 	t.Run("multiline", func(t *testing.T) {
 		tmp, err := os.CreateTemp(t.TempDir(), "TestSetEnv*")
 		test.Ok(t, err)
+		tmp.Close()
 
 		t.Setenv(envFile, tmp.Name()) // Set $TEST_GITHUB_ENV to the path to our file
 
@@ -216,7 +218,7 @@ func TestSetOutput(t *testing.T) {
 	t.Run("exists", func(t *testing.T) {
 		tmp, err := os.CreateTemp(t.TempDir(), "TestSetOutput*")
 		test.Ok(t, err)
-		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+		tmp.Close()
 
 		t.Setenv(outFile, tmp.Name()) // Set $TEST_GITHUB_OUTPUT to the path to our file
 
@@ -232,7 +234,7 @@ func TestSetOutput(t *testing.T) {
 	t.Run("multiline", func(t *testing.T) {
 		tmp, err := os.CreateTemp(t.TempDir(), "TestSetOutput*")
 		test.Ok(t, err)
-		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+		tmp.Close()
 
 		t.Setenv(outFile, tmp.Name()) // Set $TEST_GITHUB_OUTPUT to the path to our file
 
@@ -249,12 +251,8 @@ func TestSetOutput(t *testing.T) {
 		test.True(t, bytes.Contains(contents, []byte(value)))
 	})
 	t.Run("unset", func(t *testing.T) {
-		tmp, err := os.CreateTemp(t.TempDir(), "TestSetOutput*")
-		test.Ok(t, err)
-		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
-
 		// Not setting $TEST_GITHUB_OUTPUT
-		err = SetOutput("KEY", "value")
+		err := SetOutput("KEY", "value")
 		test.Err(t, err)
 	})
 	t.Run("set but no file", func(t *testing.T) {
@@ -331,7 +329,7 @@ func TestSetState(t *testing.T) {
 	t.Run("exists", func(t *testing.T) {
 		tmp, err := os.CreateTemp(t.TempDir(), "TestSetState*")
 		test.Ok(t, err)
-		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+		tmp.Close()
 
 		t.Setenv(stateFile, tmp.Name()) // Set $TEST_GITHUB_STATE to the path to our file
 
@@ -347,7 +345,7 @@ func TestSetState(t *testing.T) {
 	t.Run("multiline", func(t *testing.T) {
 		tmp, err := os.CreateTemp(t.TempDir(), "TestSetState*")
 		test.Ok(t, err)
-		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+		tmp.Close()
 
 		t.Setenv(stateFile, tmp.Name()) // Set $TEST_GITHUB_STATE to the path to our file
 
@@ -364,12 +362,8 @@ func TestSetState(t *testing.T) {
 		test.True(t, bytes.Contains(contents, []byte(value)))
 	})
 	t.Run("unset", func(t *testing.T) {
-		tmp, err := os.CreateTemp(t.TempDir(), "TestSetState*")
-		test.Ok(t, err)
-		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
-
 		// Not setting $TEST_GITHUB_STATE
-		err = SetState("KEY", "value")
+		err := SetState("KEY", "value")
 		test.Err(t, err)
 	})
 	t.Run("set but no file", func(t *testing.T) {
@@ -414,7 +408,7 @@ func TestAddPath(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		tmp, err := os.CreateTemp(t.TempDir(), "TestAddPath*")
 		test.Ok(t, err)
-		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+		tmp.Close()
 
 		// Set the env var to our now existing file
 		t.Setenv(pathFile, tmp.Name())
@@ -447,7 +441,7 @@ func TestSummary(t *testing.T) {
 	t.Run("exists but empty", func(t *testing.T) {
 		tmp, err := os.CreateTemp(t.TempDir(), "TestSummary*")
 		test.Ok(t, err)
-		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+		tmp.Close()
 
 		t.Setenv(summaryFile, tmp.Name()) // Set $TEST_GITHUB_STEP_SUMMARY to our temp file
 
@@ -464,7 +458,7 @@ func TestSummary(t *testing.T) {
 	t.Run("overwrite existing contents", func(t *testing.T) {
 		tmp, err := os.CreateTemp(t.TempDir(), "TestSummary*")
 		test.Ok(t, err)
-		t.Cleanup(func() { os.RemoveAll(tmp.Name()) })
+		tmp.Close()
 
 		t.Setenv(summaryFile, tmp.Name()) // Set $TEST_GITHUB_STEP_SUMMARY to our temp file
 

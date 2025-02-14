@@ -1,6 +1,6 @@
 module github.com/FollowTheProcess/actions
 
-go 1.23
+go 1.24
 
 require github.com/FollowTheProcess/test v0.20.2
 

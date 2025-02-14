@@ -2,9 +2,9 @@
 package actions
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
-	"math/rand/v2"
 	"os"
 	"strings"
 )
@@ -197,7 +197,7 @@ func setVarFile(name, key, value string) error {
 	// If the value is multi-line, do the whole EOF delimiter thing, but with
 	// a random string to make pretty sure it never collides with file content
 	if strings.Contains(value, "\n") {
-		delimiter := "ghadelimiter_" + randString()
+		delimiter := "ghadelimiter_" + rand.Text()
 		fmt.Fprintf(file, "%s<<%s\n%s\n%s", key, delimiter, value, delimiter)
 	} else {
 		fmt.Fprintf(file, "%s=%s\n", key, value)
@@ -211,20 +211,4 @@ func setVarFile(name, key, value string) error {
 	}
 
 	return nil
-}
-
-// randString produces a random string of 16 characters.
-func randString() string {
-	// TODO(@FollowTheProcess): Use crypto/rand.Text when it's out
-	const (
-		charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-		size    = 16
-	)
-
-	b := make([]byte, size)
-	for i := range b {
-		b[i] = charset[rand.IntN(len(charset))] //nolint: gosec // This is not for security purposes
-	}
-
-	return string(b)
 }
