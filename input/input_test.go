@@ -389,3 +389,76 @@ func TestFloat(t *testing.T) {
 		})
 	}
 }
+
+func TestList(t *testing.T) {
+	tests := []struct {
+		env     map[string]string // Env vars to set for the test
+		name    string            // Name of the test case
+		input   string            // Name of the input variable to get
+		want    []string          // Expected return value
+		wantErr bool              // Whether we wanted an error
+	}{
+		{
+			name:    "empty",
+			env:     nil,
+			input:   "hello",
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "missing",
+			env: map[string]string{
+				"INPUT_HELLO_THERE": "hello",
+			},
+			input:   "something_else",
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "found line separated",
+			env: map[string]string{
+				"INPUT_HELLO_THERE": "hello\nthere\ngeneral\nkenobi",
+			},
+			input:   "hello_there",
+			want:    []string{"hello", "there", "general", "kenobi"},
+			wantErr: false,
+		},
+		{
+			name: "found comma separated",
+			env: map[string]string{
+				"INPUT_HELLO_THERE": "hello,there,general,kenobi",
+			},
+			input:   "hello_there",
+			want:    []string{"hello", "there", "general", "kenobi"},
+			wantErr: false,
+		},
+		{
+			name: "found and trimmed line",
+			env: map[string]string{
+				"INPUT_HELLO_THERE": "\n\n hello\t \n\t there  \n    general\n\t\t kenobi\n\n",
+			},
+			input:   "hello_there",
+			want:    []string{"hello", "there", "general", "kenobi"},
+			wantErr: false,
+		},
+		{
+			name: "found and trimmed comma",
+			env: map[string]string{
+				"INPUT_HELLO_THERE": "\n\n hello\t , \t there  ,  general,\t\t kenobi   ",
+			},
+			input:   "hello_there",
+			want:    []string{"hello", "there", "general", "kenobi"},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		for key, val := range tt.env {
+			t.Setenv(key, val)
+		}
+
+		got, err := input.List(tt.input)
+		test.WantErr(t, err, tt.wantErr)
+		test.EqualFunc(t, got, tt.want, slices.Equal)
+	}
+}
