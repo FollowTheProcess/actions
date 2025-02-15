@@ -116,6 +116,9 @@ linters-settings:
           - checkPrivateReceivers
           - checkPublicInterface
 
+      - name: flag-parameter
+        disabled: true # This is bogus
+
       - name: function-length
         disabled: true # Bad proxy for complexity
 
