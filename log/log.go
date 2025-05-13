@@ -121,44 +121,6 @@ func (l Logger) Error(message string, annotations ...Annotation) {
 	l.log("error", message, annotations...)
 }
 
-// log renders an annotated message (cmd = notice | warning | error).
-//
-// It's behaviour is common to all annotations.
-func (l Logger) log(cmd, message string, annotations ...Annotation) {
-	if message == "" {
-		return
-	}
-
-	// Escape the message
-	message = messageEscaper.Replace(message)
-
-	// If there are no annotations, this is just a straight message
-	if len(annotations) == 0 {
-		fmt.Fprintf(l.out, "::%s::%s\n", cmd, message)
-
-		return
-	}
-
-	var ann annotation
-
-	for _, annotation := range annotations {
-		annotation.apply(&ann)
-	}
-
-	annotation := ann.String()
-
-	// If there were no annotations after stringifying it (due to the rules for the annotations)
-	// then we can just do the raw message again
-	if len(annotation) == 0 {
-		fmt.Fprintf(l.out, "::%s::%s\n", cmd, message)
-
-		return
-	}
-
-	// Otherwise we need a space after ::<cmd> and the first annotation
-	fmt.Fprintf(l.out, "::%s %s::%s\n", cmd, annotation, message)
-}
-
 // StartGroup begins a new expandable group in the workflow log.
 //
 // Anything printed between the call to StartGroup and the call to [Logger.EndGroup] will
@@ -227,4 +189,42 @@ func (l Logger) Mask(str string) {
 
 	str = messageEscaper.Replace(strings.TrimSpace(str))
 	fmt.Fprintf(l.out, "::add-mask::%s\n", str)
+}
+
+// log renders an annotated message (cmd = notice | warning | error).
+//
+// It's behaviour is common to all annotations.
+func (l Logger) log(cmd, message string, annotations ...Annotation) {
+	if message == "" {
+		return
+	}
+
+	// Escape the message
+	message = messageEscaper.Replace(message)
+
+	// If there are no annotations, this is just a straight message
+	if len(annotations) == 0 {
+		fmt.Fprintf(l.out, "::%s::%s\n", cmd, message)
+
+		return
+	}
+
+	var ann annotation
+
+	for _, annotation := range annotations {
+		annotation.apply(&ann)
+	}
+
+	annotation := ann.String()
+
+	// If there were no annotations after stringifying it (due to the rules for the annotations)
+	// then we can just do the raw message again
+	if len(annotation) == 0 {
+		fmt.Fprintf(l.out, "::%s::%s\n", cmd, message)
+
+		return
+	}
+
+	// Otherwise we need a space after ::<cmd> and the first annotation
+	fmt.Fprintf(l.out, "::%s %s::%s\n", cmd, annotation, message)
 }
