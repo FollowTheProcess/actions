@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/FollowTheProcess/actions/input"
+	"go.followtheprocess.codes/actions/input"
 	"go.followtheprocess.codes/test"
 )
 
