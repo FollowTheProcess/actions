@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/FollowTheProcess/actions/log"
-	"github.com/FollowTheProcess/test"
+	"go.followtheprocess.codes/test"
 )
 
 func TestIsDebug(t *testing.T) {

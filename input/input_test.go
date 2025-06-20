@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/FollowTheProcess/actions/input"
-	"github.com/FollowTheProcess/test"
+	"go.followtheprocess.codes/test"
 )
 
 func TestGet(t *testing.T) {
