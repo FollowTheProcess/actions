@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/FollowTheProcess/test"
+	"go.followtheprocess.codes/test"
 )
 
 const (
