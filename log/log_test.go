@@ -6,7 +6,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/FollowTheProcess/actions/log"
+	"go.followtheprocess.codes/actions/log"
 	"go.followtheprocess.codes/test"
 )
 

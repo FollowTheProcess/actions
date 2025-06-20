@@ -1,4 +1,4 @@
-module github.com/FollowTheProcess/actions
+module go.followtheprocess.codes/actions
 
 go 1.24
 

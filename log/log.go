@@ -2,7 +2,7 @@
 // within a GitHub action.
 //
 // See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions
-package log
+package log // import "go.followtheprocess.codes/actions/log"
 
 import (
 	"fmt"

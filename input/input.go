@@ -1,5 +1,5 @@
 // Package input provides mechanisms for fetching type safe input from a GitHub Action.
-package input
+package input // import "go.followtheprocess.codes/actions/input"
 
 import (
 	"bufio"

@@ -1,5 +1,5 @@
 // Package actions provides a toolkit for writing GitHub Actions in Go.
-package actions
+package actions // import "go.followtheprocess.codes/actions"
 
 import (
 	"crypto/rand"
