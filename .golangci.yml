@@ -26,6 +26,7 @@ linters:
     - godox # "todo" and "fixme" comments are allowed
     - goheader # No need
     - gosmopolitan # No need
+    - goprintffuncname # Flags things like logger.Debug
     - grouper # Imports take care of themselves, rest is common sense
     - ireturn # This is just not necessary or practical in a real codebase
     - lll # Auto formatters do this and what they can't do I don't care about
