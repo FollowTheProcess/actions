@@ -30,7 +30,7 @@ var (
 	// to which step summaries should be written.
 	summaryFile = "GITHUB_STEP_SUMMARY"
 
-	// stateFile is the name of the env var containng the filepath to the special GitHub file
+	// stateFile is the name of the env var containing the filepath to the special GitHub file
 	// to which state should be written for retrieval in other phases of the action.
 	stateFile = "GITHUB_STATE"
 

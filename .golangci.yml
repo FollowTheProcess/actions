@@ -86,6 +86,7 @@ linters:
     gosec:
       excludes:
         - G104 # Errors not checked, handled by errcheck
+        - G703 # Taint analysis causes a lot of false positives
 
     govet:
       enable-all: true
@@ -168,3 +169,6 @@ linters:
 
         - name: unused-receiver
           disabled: true # As above
+
+        - name: var-naming
+          disabled: true
