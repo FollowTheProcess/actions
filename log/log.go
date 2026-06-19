@@ -12,6 +12,8 @@ import (
 )
 
 // messageEscaper escapes disallowed characters in workflow log messages.
+//
+//nolint:gochecknoglobals // This is built once and reused.
 var messageEscaper = strings.NewReplacer(
 	"%", "%25",
 	"\r", "%0D",
@@ -58,6 +60,8 @@ func IsDebug() bool {
 // option enabled.
 //
 // See https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/troubleshooting-workflows/enabling-debug-logging
+//
+//nolint:goprintffuncname // This is not a printf.
 func (l Logger) Debug(format string, a ...any) {
 	// GitHub gets confused when workflow commands are empty
 	if format == "" {
@@ -169,6 +173,7 @@ func (l Logger) EndGroup() {
 func (l Logger) WithGroup(title string, fn func()) {
 	l.StartGroup(title)
 	defer l.EndGroup()
+
 	fn()
 }
 

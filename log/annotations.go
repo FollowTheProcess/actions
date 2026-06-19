@@ -7,6 +7,8 @@ import (
 
 // propertyEscaper escapes disallowed characters in workflow log command properties
 // like `file` etc.
+//
+//nolint:gochecknoglobals // This is built once and reused.
 var propertyEscaper = strings.NewReplacer(
 	"%", "%25",
 	"\r", "%0D",
