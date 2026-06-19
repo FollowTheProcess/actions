@@ -13,6 +13,7 @@ import (
 // either $GITHUB_ENV or $GITHUB_OUTPUT, but we have to pass something to OpenFile so.
 const filePermissions = 0o644
 
+//nolint:gochecknoglobals // See comment
 var (
 	// We override both of these in tests because we need to test things like what happens if
 	// the file doesn't exist, we can't write to it etc. and we have limited ability to do that
@@ -118,6 +119,7 @@ func AddPath(path string) error {
 		return errors.New("$GITHUB_PATH is not set or is empty")
 	}
 
+	//nolint:gosec // G703: path is set by the trusted Actions runner, not user input
 	file, err := os.OpenFile(githubPathFile, os.O_APPEND|os.O_WRONLY, filePermissions)
 	if err != nil {
 		return fmt.Errorf("could not open $GITHUB_PATH file %s: %w", githubPathFile, err)
@@ -153,6 +155,7 @@ func Summary(contents string) error {
 
 	// Write the contents to the file, creating it if necessary, overwriting it if
 	// called again
+	//nolint:gosec // G703: path is set by the trusted Actions runner, not user input
 	if err := os.WriteFile(path, []byte(contents), filePermissions); err != nil {
 		return fmt.Errorf("could not write to $%s at path %s: %w", summaryFile, path, err)
 	}
@@ -188,6 +191,7 @@ func setVarFile(name, key, value string) error {
 	}
 
 	// Append to the file
+	//nolint:gosec // G703: path is set by the trusted Actions runner, not user input
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, filePermissions)
 	if err != nil {
 		return fmt.Errorf("could not open $%s file: %w", outFile, err)
